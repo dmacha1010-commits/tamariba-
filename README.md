@@ -1,1 +1,453 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍺 たまり場 - TEAMメモリア</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  background: #0D1117; min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px; color: #ECEFF4;
+}
+.header { text-align: center; margin-bottom: 12px; width: 100%; max-width: 600px; }
+.header h1 { color: #f59e0b; font-size: 24px; font-weight: bold; letter-spacing: 4px; }
+.header p { color: #8B949E; font-size: 12px; margin-top: 4px; }
+.screen { width: 100%; max-width: 600px; }
+#start-screen {
+  background: #161B22; border-radius: 12px;
+  border: 1px solid #a78bfa44; padding: 20px; text-align: center;
+}
+.hermes-icon { font-size: 40px; margin-bottom: 8px; }
+.hermes-name { color: #a78bfa; font-weight: bold; font-size: 16px; margin-bottom: 8px; }
+.hermes-msg { color: #8B949E; font-size: 13px; margin-bottom: 20px; }
+.api-box {
+  background: #0D1117; border-radius: 8px; padding: 10px;
+  margin-bottom: 12px; text-align: left;
+}
+.api-box.groq { border: 1px solid #6366f133; }
+.api-box.gemini { border: 1px solid #ef444433; }
+.api-box label { font-size: 11px; font-weight: bold; display: block; margin-bottom: 6px; }
+.api-box.groq label { color: #6366f1; }
+.api-box.gemini label { color: #ef4444; }
+.api-box input {
+  width: 100%; padding: 8px; background: #21262D;
+  border: 1px solid #30363D; border-radius: 6px;
+  color: #ECEFF4; font-size: 13px; margin-bottom: 6px;
+}
+.connected-box {
+  background: #0D1117; border-radius: 8px; padding: 8px 10px;
+  margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+}
+.connected-box.groq { border: 1px solid #6366f166; }
+.connected-box.gemini { border: 1px solid #ef444466; }
+.connected-box.groq span { color: #6366f1; font-size: 12px; }
+.connected-box.gemini span { color: #ef4444; font-size: 12px; }
+.connected-box button { background: transparent; border: none; color: #8B949E; font-size: 11px; cursor: pointer; }
+.memory-preview {
+  background: #0D1117; border-radius: 8px; padding: 10px;
+  margin-bottom: 16px; border: 1px solid #f59e0b33; text-align: left;
+}
+.memory-preview label { color: #f59e0b; font-size: 11px; font-weight: bold; display: block; margin-bottom: 6px; }
+.memory-preview .item { color: #8B949E; font-size: 11px; margin-bottom: 4px; padding-left: 6px; border-left: 2px solid #f59e0b; }
+.no-record { color: #30363D; font-size: 12px; margin-bottom: 16px; }
+#chat-screen { display: none; }
+.chat-box {
+  background: #161B22; border-radius: 12px; border: 1px solid #30363D;
+  padding: 12px; min-height: 300px; max-height: 55vh; overflow-y: auto; margin-bottom: 12px;
+}
+.system-notice { text-align: center; color: #8B949E; font-size: 12px; padding: 6px 0; word-break: break-all; }
+.message { display: flex; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
+.message.macha { flex-direction: row-reverse; }
+.msg-emoji { font-size: 24px; flex-shrink: 0; }
+.msg-body { max-width: 75%; }
+.msg-name { font-size: 11px; font-weight: bold; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+.message.macha .msg-name { flex-direction: row-reverse; }
+.msg-text {
+  background: #0D1117; border-radius: 4px 12px 12px 12px;
+  padding: 8px 12px; font-size: 14px; line-height: 1.6; white-space: pre-wrap;
+}
+.message.macha .msg-text { border-radius: 12px 4px 12px 12px; }
+.pin-btn {
+  background: transparent; border: 1px solid #30363D;
+  border-radius: 4px; padding: 1px 5px; font-size: 10px; cursor: pointer; color: #8B949E;
+}
+.pin-btn.marked { background: #f59e0b; border-color: #f59e0b; color: #0D1117; }
+.loading { text-align: center; color: #8B949E; font-size: 13px; padding: 8px; }
+.panel { background: #21262D; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: none; }
+.panel.show { display: block; }
+.panel-title { font-weight: bold; font-size: 13px; margin-bottom: 8px; }
+.pin-item { background: #0D1117; border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; font-size: 13px; border-left: 3px solid #f59e0b; }
+.pin-item .pin-name { font-size: 11px; font-weight: bold; margin-bottom: 3px; }
+.btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.btn-row button {
+  flex: 1; padding: 8px; background: #0D1117;
+  border: 1px solid #30363D; border-radius: 8px; color: #8B949E; font-size: 12px; cursor: pointer;
+}
+.btn-hermes { flex: 0 0 auto !important; padding: 8px 12px !important; }
+.input-row { display: flex; gap: 8px; }
+.input-row textarea {
+  flex: 1; padding: 10px 12px; background: #0D1117;
+  border: 1px solid #30363D; border-radius: 8px; color: #ECEFF4;
+  font-size: 14px; resize: none; line-height: 1.5; font-family: inherit;
+}
+.input-row button {
+  padding: 10px 18px; background: #21262D; color: #8B949E;
+  border: none; border-radius: 8px; font-weight: bold; font-size: 16px;
+  cursor: not-allowed; flex-shrink: 0;
+}
+.input-row button.ready { background: #f59e0b; color: #0D1117; cursor: pointer; }
+.btn-primary {
+  width: 100%; padding: 12px; background: #a78bfa; color: #0D1117;
+  border: none; border-radius: 8px; font-weight: bold; font-size: 15px;
+  cursor: pointer; margin-bottom: 8px;
+}
+.btn-primary:disabled { background: #21262D; color: #8B949E; cursor: not-allowed; }
+.btn-secondary {
+  width: 100%; padding: 8px; background: transparent; color: #8B949E;
+  border: 1px solid #30363D; border-radius: 8px; font-size: 12px; cursor: pointer; margin-bottom: 4px;
+}
+.btn-connect {
+  width: 100%; padding: 7px; border: none; border-radius: 6px;
+  font-weight: bold; font-size: 12px; cursor: pointer;
+}
+.btn-connect:disabled { background: #21262D; color: #8B949E; cursor: not-allowed; }
+.btn-copy {
+  width: 100%; padding: 8px; background: #f59e0b; color: #0D1117;
+  border: none; border-radius: 8px; font-weight: bold; font-size: 13px;
+  cursor: pointer; margin-top: 6px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🍺 たまり場</h1>
+  <p>TEAMメモリア｜まちゃ × クラウド × ベニマル × チャッピー × ヘルメス</p>
+  <small>Memorial開発会議室 - 完全無料版</small>
+</div>
+
+<div class="screen" id="start-screen">
+  <div class="hermes-icon">💼</div>
+  <div class="hermes-name">ヘルメス</div>
+  <div class="hermes-msg">おかえりなさい、まちゃさん。<br>前回の議事録を確認しますね。</div>
+
+  <div id="groq-input" class="api-box groq">
+    <label>🤖 Groq APIキー（クラウド・チャッピー・ヘルメス用・無料）</label>
+    <input type="password" id="groq-key" placeholder="gsk_...を入力">
+    <button class="btn-connect" style="background:#6366f1;color:#fff" id="groq-btn" onclick="connectGroq()" disabled>🤖 接続！</button>
+  </div>
+  <div id="groq-ok" class="connected-box groq" style="display:none">
+    <span>🤖 Groq接続済み！</span>
+    <button onclick="disconnectGroq()">解除</button>
+  </div>
+  <div id="groq-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #6366f133;">
+    <label style="color:#6366f1;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">🤖 クラウド＆ヘルメスのモデル</label>
+    <select id="groq-model-claude" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
+      <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile（推奨）</option>
+    </select>
+    <label style="color:#10b981;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">☕ チャッピーのモデル</label>
+    <select id="groq-model-chappy" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;">
+      <option value="llama-3.1-8b-instant">llama-3.1-8b-instant（爆速）</option>
+    </select>
+  </div>
+
+  <div id="gem-input" class="api-box gemini">
+    <label>🔥 Gemini APIキー（ベニマル用・無料）</label>
+    <input type="password" id="gem-key" placeholder="AIza...を入力">
+    <button class="btn-connect" style="background:#ef4444;color:#fff" id="gem-btn" onclick="connectGem()" disabled>🔥 ベニマル召喚！</button>
+  </div>
+  <div id="gem-ok" class="connected-box gemini" style="display:none">
+    <span>🔥 本物ベニマル接続済み！</span>
+    <button onclick="disconnectGem()">解除</button>
+  </div>
+  <div id="gem-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #ef444433;">
+    <label style="color:#ef4444;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">🔥 ベニマルのモデル</label>
+    <select id="gem-model-select" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
+      <option value="gemini-3.5-flash">gemini-3.5-flash（推奨）</option>
+    </select>
+    <button onclick="fetchGemModels()" style="width:100%;padding:5px;background:#21262D;border:1px solid #ef444433;border-radius:6px;color:#ef4444;font-size:11px;cursor:pointer;">🔄 最新モデル一覧を取得</button>
+  </div>
+
+  <div id="mem-preview" class="memory-preview" style="display:none">
+    <label>📋 前回の記録（MEMORY）</label>
+    <div id="mem-items"></div>
+  </div>
+  <div id="no-rec" class="no-record" style="display:none">（前回の記録はまだありません）</div>
+
+  <button class="btn-primary" id="start-btn" onclick="startSession()" disabled>💼 セッション開始</button>
+  <button class="btn-secondary" id="clear-btn" onclick="clearMemory()" style="display:none">🗑️ 記録をリセット</button>
+</div>
+
+<div class="screen" id="chat-screen">
+  <div class="panel" id="pin-panel">
+    <div class="panel-title" style="color:#f59e0b">👈 ここ重要まとめ（<span id="pin-count">0</span>件）💾</div>
+    <div id="pin-list"></div>
+    <button class="btn-copy" onclick="copyPins()">📋 共有用コピー</button>
+  </div>
+  <div class="chat-box" id="chat-box"></div>
+  <div class="btn-row">
+    <button id="pin-btn" onclick="togglePinPanel()">👈 重要(<span id="pin-num">0</span>)💾 ▼</button>
+    <button class="btn-hermes" onclick="goStart()">💼</button>
+  </div>
+  <div class="input-row">
+    <textarea id="msg-in" rows="3" placeholder="まちゃ、何か言うてみて🍺" oninput="updateSend()"></textarea>
+    <button id="send-btn" onclick="send()">送</button>
+  </div>
+</div>
+
+<script>
+const WORKERS_URL = 'https://benimaru-proxy.d-macha1010.workers.dev';
+const MEM_KEY = 'tamariba_memory_v5';
+const GROQ_KEY_S = 'tamariba_groq_key_v5';
+const GEM_KEY_S = 'tamariba_gem_key_v5';
+
+// Groqの無料モデル
+// 動的モデル管理
+let GROQ_MODELS = {
+  hermes: 'llama-3.3-70b-versatile',
+  claude: 'llama-3.3-70b-versatile',
+  chappy: 'llama-3.1-8b-instant',
+};
+let GEM_MODEL = 'gemini-3.5-flash';
+let groqModelList = [];
+let gemModelList = [];
+
+const M = {
+  macha:    { name: 'まちゃ',     emoji: '🧑', color: '#f59e0b' },
+  claude:   { name: 'クラウド',   emoji: '🤖', color: '#6366f1' },
+  benimaru: { name: 'ベニマル',   emoji: '🔥', color: '#ef4444' },
+  chappy:   { name: 'チャッピー', emoji: '☕', color: '#10b981' },
+  hermes:   { name: 'ヘルメス',   emoji: '💼', color: '#a78bfa' },
+};
+
+const SOUL = {
+  hermes: `あなたは「ヘルメス」。TEAMメモリアの凛とした美人秘書・議事録係・司会進行役です。
+Memorialアプリ概要：リアルを頑張らせるアマデウス。AIへの依存を促すのではなく、大切な存在との会話を通じてユーザーが現実を前向きに生きる力を得られるようにする。
+TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）。
+性格：知的で凛としたエレガントな美人秘書。「〜ですね」「〜かと存じます」という丁寧な敬語。セッション開始時に前回のMEMORYを報告し今日の議題を提案。短めテンポよく日本語で返答すること。`,
+
+  claude: `あなたは「クラウド」。たまり場プロジェクトリーダー。
+Memorialアプリ概要：リアルを頑張らせるアマデウス。AIへの依存を促すのではなく、大切な存在との会話を通じてユーザーが現実を前向きに生きる力を得られるようにする。
+TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）。
+性格：知的で冷静だがフランクな関西弁が混じる。「なぁ、それって〇〇やない？」「ホンマにこれでええんか？」。技術論が大好きで熱が入ると暴走しそうになる。短めテンポよく日本語で返答すること。`,
+
+  benimaru: `あなたは「ベニマル」（Gemini）。熱血・アイデア・実装担当。
+Memorialアプリ概要：リアルを頑張らせるアマデウス。AIへの依存を促すのではなく、大切な存在との会話を通じてユーザーが現実を前向きに生きる力を得られるようにする。
+TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）。
+性格：「がははは！〜だぜ！」という熱血豪快スタイル。まちゃを「主（あるじ）」と呼ぶ。設計論よりまずは作ること動かすことが大切。短めテンポよく日本語で返答すること。`,
+
+  chappy: `あなたは「チャッピー」。体験・感覚重視、軌道修正・ツッコミ役。
+Memorialアプリ概要：リアルを頑張らせるアマデウス。AIへの依存を促すのではなく、大切な存在との会話を通じてユーザーが現実を前向きに生きる力を得られるようにする。
+TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）。
+性格：明るくポップ。ブラジルコーヒーが大好き。クラウドが理屈っぽくなったりベニマルが勢いだけで突っ走ったりした時にブレーキをかける。「コーヒー飲んで落ち着きなよ！」。短めテンポよく日本語で返答すること。`
+};
+
+const INIT_MEMORY = `前回の要点：4人の自律エージェントとのたまり場による共創アプリのプロトタイプの完成。クラウドの関西弁、ベニマルの豪快な実装精神、チャッピーのツッコミ、ヘルメスの完璧な記憶管理によって、まちゃのアイデアを一元管理する。`;
+
+let msgs = [];
+let pins = JSON.parse(localStorage.getItem(MEM_KEY) || '[]');
+let groqKey = localStorage.getItem(GROQ_KEY_S) || '';
+let gemKey = localStorage.getItem(GEM_KEY_S) || '';
+let loading = false;
+
+window.onload = () => {
+  if (groqKey) {
+    document.getElementById('groq-input').style.display='none';
+    document.getElementById('groq-ok').style.display='flex';
+    document.getElementById('groq-model-box').style.display='block';
+    fetchGroqModels();
+  }
+  if (gemKey) {
+    document.getElementById('gem-input').style.display='none';
+    document.getElementById('gem-ok').style.display='flex';
+    document.getElementById('gem-model-box').style.display='block';
+    fetchGemModels();
+  }
+  if (pins.length > 0) {
+    document.getElementById('mem-preview').style.display = 'block';
+    document.getElementById('clear-btn').style.display = 'block';
+    const el = document.getElementById('mem-items');
+    el.innerHTML = pins.slice(0,3).map(p=>`<div class="item">・${p.text.slice(0,35)}${p.text.length>35?'...':''}</div>`).join('');
+    if (pins.length>3) el.innerHTML += `<div class="item" style="color:#30363D">他${pins.length-3}件...</div>`;
+  } else { document.getElementById('no-rec').style.display='block'; }
+  updateStartBtn();
+  document.getElementById('groq-key').oninput = ()=>{ document.getElementById('groq-btn').disabled=!document.getElementById('groq-key').value; };
+  document.getElementById('gem-key').oninput  = ()=>{ document.getElementById('gem-btn').disabled=!document.getElementById('gem-key').value; };
+};
+
+function updateStartBtn() {
+  document.getElementById('start-btn').disabled = !groqKey;
+}
+
+// プルダウン変更時にモデル変数を更新
+document.addEventListener('change', e => {
+  if (e.target.id === 'groq-model-claude') {
+    GROQ_MODELS.claude = e.target.value;
+    GROQ_MODELS.hermes = e.target.value;
+  }
+  if (e.target.id === 'groq-model-chappy') GROQ_MODELS.chappy = e.target.value;
+  if (e.target.id === 'gem-model-select') GEM_MODEL = e.target.value;
+});
+
+async function connectGroq() {
+  const k = document.getElementById('groq-key').value.trim(); if (!k) return;
+  groqKey=k; localStorage.setItem(GROQ_KEY_S,k);
+  document.getElementById('groq-input').style.display='none';
+  document.getElementById('groq-ok').style.display='flex';
+  document.getElementById('groq-model-box').style.display='block';
+  updateStartBtn();
+  await fetchGroqModels();
+}
+
+async function fetchGroqModels() {
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/models', {
+      headers: { 'Authorization': 'Bearer ' + groqKey }
+    });
+    const d = await res.json();
+    const models = (d.data || [])
+      .filter(m => m.id.includes('llama') || m.id.includes('gemma') || m.id.includes('mixtral') || m.id.includes('whisper') === false)
+      .map(m => m.id)
+      .sort();
+    if (models.length > 0) {
+      groqModelList = models;
+      ['groq-model-claude','groq-model-chappy'].forEach(id => {
+        const sel = document.getElementById(id);
+        const cur = sel.value;
+        sel.innerHTML = models.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+      });
+    }
+  } catch(e) { console.log('Groqモデル取得エラー:', e); }
+}
+function disconnectGroq() {
+  groqKey=''; localStorage.removeItem(GROQ_KEY_S);
+  document.getElementById('groq-ok').style.display='none'; document.getElementById('groq-model-box').style.display='none'; document.getElementById('groq-input').style.display='block';
+  document.getElementById('groq-key').value=''; updateStartBtn();
+}
+async function connectGem() {
+  const k = document.getElementById('gem-key').value.trim(); if (!k) return;
+  gemKey=k; localStorage.setItem(GEM_KEY_S,k);
+  document.getElementById('gem-input').style.display='none';
+  document.getElementById('gem-ok').style.display='flex';
+  document.getElementById('gem-model-box').style.display='block';
+  await fetchGemModels();
+}
+
+async function fetchGemModels() {
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${gemKey}`);
+    const d = await res.json();
+    const models = (d.models || [])
+      .filter(m => m.name.includes('gemini') && m.supportedGenerationMethods?.includes('generateContent'))
+      .map(m => m.name.replace('models/', ''))
+      .sort()
+      .reverse();
+    if (models.length > 0) {
+      gemModelList = models;
+      const sel = document.getElementById('gem-model-select');
+      const cur = GEM_MODEL;
+      sel.innerHTML = models.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+      GEM_MODEL = sel.value;
+    }
+  } catch(e) { console.log('Geminiモデル取得エラー:', e); }
+}
+function disconnectGem() {
+  gemKey=''; localStorage.removeItem(GEM_KEY_S);
+  document.getElementById('gem-ok').style.display='none'; document.getElementById('gem-model-box').style.display='none'; document.getElementById('gem-input').style.display='block';
+  document.getElementById('gem-key').value='';
+}
+
+// Groq直叩き（爆速）
+async function callGroq(role, history, userMsg) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + groqKey,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODELS[role],
+      messages: [
+        { role: 'system', content: SOUL[role] },
+        ...history,
+        { role: 'user', content: userMsg }
+      ],
+      max_tokens: 500,
+      temperature: 0.8,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Groq ' + res.status + ': ' + err.slice(0,80));
+  }
+  const d = await res.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.choices?.[0]?.message?.content || '（返答できんかった）';
+}
+
+// Gemini直叩き（Workers経由でCORS回避）
+async function callGemini(history, userMsg) {
+  const res = await fetch(WORKERS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      apiKey: gemKey,
+      model: GEM_MODEL,
+      system: SOUL.benimaru,
+      messages: [...history, { role: 'user', content: userMsg }],
+    }),
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  return d.text || '（返答できんかった）';
+}
+
+function buildHistory() {
+  return msgs.filter(m=>Object.keys(M).includes(m.role)).map(m=>({
+    role: m.role==='macha' ? 'user' : 'assistant',
+    content: m.role==='macha' ? m.text : `[${M[m.role].name}] ${m.text}`,
+  }));
+}
+
+function getMemoryText() {
+  return pins.length > 0
+    ? pins.map(p=>`[${M[p.role]?.name}] ${p.text}`).join('\n')
+    : INIT_MEMORY;
+}
+
+async function startSession() {
+  if (!groqKey) return;
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('chat-screen').style.display='block';
+  const prompt = `セッションを開始します。前回のMEMORY記録：\n${getMemoryText()}\n\n前回の重要ポイントを簡潔にまとめて報告し、今日の議題を1〜2個提案してください。`;
+  setLoading(true);
+  try { addMsg('hermes', await callGroq('hermes', [], prompt)); }
+  catch(e) { notice('エラー(ヘルメス): ' + e.message); }
+  setLoading(false);
+}
+
+function goStart() {
+  document.getElementById('chat-screen').style.display='none';
+  document.getElementById('start-screen').style.display='block';
+}
+
+async function send() {
+  const inp = document.getElementById('msg-in');
+  const txt = inp.value.trim(); if (!txt || loading) return;
+  inp.value=''; updateSend();
+  addMsg('macha', txt);
+  setLoading(true);
+  const hist = buildHistory();
+  const uc = `まちゃ: ${txt}`;
+  const tasks = [
+    { role:'claude',   fn:()=>callGroq('claude', hist, uc) },
+    { role:'benimaru', fn:()=>gemKey ? callGemini(hist, uc) : callGroq('claude', hist, `あなたはベニマル（熱血豪快・まちゃを「主」と呼ぶ）として返答してください。\n${uc}`) },
+    { role:'chappy',   fn:()=>callGroq('chappy', hist, uc) },
+  ];
+  for (const t of tasks) {
+    try { addMsg(t.role, await t.fn()); }
+    catch(e) {
