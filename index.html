@@ -5,129 +5,124 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🍺 たまり場 - TEAMメモリア</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-    background: #1a1a2e; min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center;
-    padding: 16px; color: #e2e8f0;
-  }
-  .header { text-align: center; margin-bottom: 12px; width: 100%; max-width: 600px; }
-  .header h1 { color: #f59e0b; font-size: 24px; font-weight: bold; letter-spacing: 4px; }
-  .header p { color: #94a3b8; font-size: 12px; margin-top: 4px; }
-  .header small { color: #475569; font-size: 11px; }
-  .screen { width: 100%; max-width: 600px; }
-  #start-screen {
-    background: #16213e; border-radius: 12px;
-    border: 1px solid #a78bfa44; padding: 20px; text-align: center;
-  }
-  .hermes-icon { font-size: 40px; margin-bottom: 8px; }
-  .hermes-name { color: #a78bfa; font-weight: bold; font-size: 16px; margin-bottom: 8px; }
-  .hermes-msg { color: #94a3b8; font-size: 13px; margin-bottom: 20px; }
-  .api-box {
-    background: #0f172a; border-radius: 8px; padding: 10px; margin-bottom: 12px; text-align: left;
-  }
-  .api-box.openrouter { border: 1px solid #6366f133; }
-  .api-box.gemini { border: 1px solid #ef444433; }
-  .api-box label { font-size: 11px; font-weight: bold; display: block; margin-bottom: 6px; }
-  .api-box.openrouter label { color: #6366f1; }
-  .api-box.gemini label { color: #ef4444; }
-  .api-box input {
-    width: 100%; padding: 8px; background: #1e293b;
-    border: 1px solid #334155; border-radius: 6px;
-    color: #e2e8f0; font-size: 13px; margin-bottom: 6px;
-  }
-  .connected-box {
-    background: #0f172a; border-radius: 8px; padding: 8px 10px;
-    margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
-  }
-  .connected-box.openrouter { border: 1px solid #6366f166; }
-  .connected-box.gemini { border: 1px solid #ef444466; }
-  .connected-box span { font-size: 12px; }
-  .connected-box.openrouter span { color: #6366f1; }
-  .connected-box.gemini span { color: #ef4444; }
-  .connected-box button { background: transparent; border: none; color: #475569; font-size: 11px; cursor: pointer; }
-  .important-preview {
-    background: #0f172a; border-radius: 8px; padding: 10px;
-    margin-bottom: 16px; border: 1px solid #f59e0b33; text-align: left;
-  }
-  .important-preview label { color: #f59e0b; font-size: 11px; font-weight: bold; display: block; margin-bottom: 6px; }
-  .important-preview .item { color: #94a3b8; font-size: 11px; margin-bottom: 4px; padding-left: 6px; border-left: 2px solid #f59e0b; }
-  .no-record { color: #475569; font-size: 12px; margin-bottom: 16px; }
-  #chat-screen { display: none; }
-  .chat-box {
-    background: #16213e; border-radius: 12px; border: 1px solid #334155;
-    padding: 12px; min-height: 300px; max-height: 55vh; overflow-y: auto; margin-bottom: 12px;
-  }
-  .system-notice { text-align: center; color: #64748b; font-size: 12px; padding: 6px 0; }
-  .message { display: flex; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
-  .message.macha { flex-direction: row-reverse; }
-  .msg-emoji { font-size: 24px; flex-shrink: 0; }
-  .msg-body { max-width: 75%; }
-  .msg-name { font-size: 11px; font-weight: bold; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
-  .message.macha .msg-name { flex-direction: row-reverse; }
-  .msg-text {
-    background: #0f172a; border-radius: 4px 12px 12px 12px;
-    padding: 8px 12px; font-size: 14px; line-height: 1.6; white-space: pre-wrap;
-  }
-  .message.macha .msg-text { border-radius: 12px 4px 12px 12px; }
-  .important-btn {
-    background: transparent; border: 1px solid #475569;
-    border-radius: 4px; padding: 1px 5px; font-size: 10px; cursor: pointer; color: #64748b;
-  }
-  .important-btn.marked { background: #f59e0b; border-color: #f59e0b; color: #1a1a2e; }
-  .loading { text-align: center; color: #64748b; font-size: 13px; padding: 8px; }
-  .panel { background: #1e293b; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: none; }
-  .panel.show { display: block; }
-  .panel-title { font-weight: bold; font-size: 13px; margin-bottom: 8px; }
-  .important-item {
-    background: #0f172a; border-radius: 8px; padding: 8px 10px;
-    margin-bottom: 6px; font-size: 13px; border-left: 3px solid #f59e0b;
-  }
-  .important-item .item-name { font-size: 11px; font-weight: bold; margin-bottom: 3px; }
-  .btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
-  .btn-row button {
-    flex: 1; padding: 8px; background: #0f172a;
-    border: 1px solid #334155; border-radius: 8px; color: #475569; font-size: 12px; cursor: pointer;
-  }
-  .btn-hermes { flex: 0 0 auto !important; padding: 8px 12px !important; }
-  .input-row { display: flex; gap: 8px; }
-  .input-row textarea {
-    flex: 1; padding: 10px 12px; background: #0f172a;
-    border: 1px solid #334155; border-radius: 8px; color: #e2e8f0;
-    font-size: 14px; resize: none; line-height: 1.5; font-family: inherit;
-  }
-  .input-row button {
-    padding: 10px 18px; background: #334155; color: #64748b;
-    border: none; border-radius: 8px; font-weight: bold; font-size: 16px;
-    cursor: not-allowed; flex-shrink: 0;
-  }
-  .input-row button.ready { background: #f59e0b; color: #1a1a2e; cursor: pointer; }
-  .btn-primary {
-    width: 100%; padding: 12px; background: #a78bfa; color: #1a1a2e;
-    border: none; border-radius: 8px; font-weight: bold; font-size: 15px;
-    cursor: pointer; margin-bottom: 8px;
-  }
-  .btn-primary:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
-  .btn-secondary {
-    width: 100%; padding: 8px; background: transparent; color: #475569;
-    border: 1px solid #334155; border-radius: 8px; font-size: 12px; cursor: pointer; margin-bottom: 4px;
-  }
-  .btn-colored {
-    width: 100%; padding: 7px; border: none; border-radius: 6px;
-    font-weight: bold; font-size: 12px; cursor: pointer;
-  }
-  .btn-colored:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
-  .btn-copy {
-    width: 100%; padding: 8px; background: #f59e0b; color: #1a1a2e;
-    border: none; border-radius: 8px; font-weight: bold; font-size: 13px;
-    cursor: pointer; margin-top: 6px;
-  }
-  .info-box {
-    background: #0f172a; border: 1px solid #334155; border-radius: 8px;
-    padding: 10px; margin-bottom: 12px; font-size: 12px; color: #64748b; text-align: left;
-  }
-  .info-box a { color: #6366f1; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  background: #0D1117; min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px; color: #ECEFF4;
+}
+.header { text-align: center; margin-bottom: 12px; width: 100%; max-width: 600px; }
+.header h1 { color: #f59e0b; font-size: 24px; font-weight: bold; letter-spacing: 4px; }
+.header p { color: #8B949E; font-size: 12px; margin-top: 4px; }
+.screen { width: 100%; max-width: 600px; }
+#start-screen {
+  background: #161B22; border-radius: 12px;
+  border: 1px solid #a78bfa44; padding: 20px; text-align: center;
+}
+.hermes-icon { font-size: 40px; margin-bottom: 8px; }
+.hermes-name { color: #a78bfa; font-weight: bold; font-size: 16px; margin-bottom: 8px; }
+.hermes-msg { color: #8B949E; font-size: 13px; margin-bottom: 20px; }
+.api-box {
+  background: #0D1117; border-radius: 8px; padding: 10px;
+  margin-bottom: 12px; text-align: left;
+}
+.api-box.groq { border: 1px solid #6366f133; }
+.api-box.gemini { border: 1px solid #ef444433; }
+.api-box.openrouter { border: 1px solid #a78bfa33; }
+.api-box.openrouter label { color: #a78bfa; }
+.connected-box.openrouter { border: 1px solid #a78bfa66; }
+.connected-box.openrouter span { color: #a78bfa; font-size: 12px; }
+.api-box label { font-size: 11px; font-weight: bold; display: block; margin-bottom: 6px; }
+.api-box.groq label { color: #6366f1; }
+.api-box.gemini label { color: #ef4444; }
+.api-box input {
+  width: 100%; padding: 8px; background: #21262D;
+  border: 1px solid #30363D; border-radius: 6px;
+  color: #ECEFF4; font-size: 13px; margin-bottom: 6px;
+}
+.connected-box {
+  background: #0D1117; border-radius: 8px; padding: 8px 10px;
+  margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+}
+.connected-box.groq { border: 1px solid #6366f166; }
+.connected-box.gemini { border: 1px solid #ef444466; }
+.connected-box.groq span { color: #6366f1; font-size: 12px; }
+.connected-box.gemini span { color: #ef4444; font-size: 12px; }
+.connected-box button { background: transparent; border: none; color: #8B949E; font-size: 11px; cursor: pointer; }
+.memory-preview {
+  background: #0D1117; border-radius: 8px; padding: 10px;
+  margin-bottom: 16px; border: 1px solid #f59e0b33; text-align: left;
+}
+.memory-preview label { color: #f59e0b; font-size: 11px; font-weight: bold; display: block; margin-bottom: 6px; }
+.memory-preview .item { color: #8B949E; font-size: 11px; margin-bottom: 4px; padding-left: 6px; border-left: 2px solid #f59e0b; }
+.no-record { color: #30363D; font-size: 12px; margin-bottom: 16px; }
+#chat-screen { display: none; }
+.chat-box {
+  background: #161B22; border-radius: 12px; border: 1px solid #30363D;
+  padding: 12px; min-height: 300px; max-height: 55vh; overflow-y: auto; margin-bottom: 12px;
+}
+.system-notice { text-align: center; color: #8B949E; font-size: 12px; padding: 6px 0; word-break: break-all; }
+.message { display: flex; align-items: flex-start; margin-bottom: 12px; gap: 8px; }
+.message.macha { flex-direction: row-reverse; }
+.msg-emoji { font-size: 24px; flex-shrink: 0; }
+.msg-body { max-width: 75%; }
+.msg-name { font-size: 11px; font-weight: bold; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+.message.macha .msg-name { flex-direction: row-reverse; }
+.msg-text {
+  background: #0D1117; border-radius: 4px 12px 12px 12px;
+  padding: 8px 12px; font-size: 14px; line-height: 1.6; white-space: pre-wrap;
+}
+.message.macha .msg-text { border-radius: 12px 4px 12px 12px; }
+.pin-btn {
+  background: transparent; border: 1px solid #30363D;
+  border-radius: 4px; padding: 1px 5px; font-size: 10px; cursor: pointer; color: #8B949E;
+}
+.pin-btn.marked { background: #f59e0b; border-color: #f59e0b; color: #0D1117; }
+.loading { text-align: center; color: #8B949E; font-size: 13px; padding: 8px; }
+.panel { background: #21262D; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: none; }
+.panel.show { display: block; }
+.panel-title { font-weight: bold; font-size: 13px; margin-bottom: 8px; }
+.pin-item { background: #0D1117; border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; font-size: 13px; border-left: 3px solid #f59e0b; }
+.pin-item .pin-name { font-size: 11px; font-weight: bold; margin-bottom: 3px; }
+.btn-row { display: flex; gap: 6px; margin-bottom: 8px; }
+.btn-row button {
+  flex: 1; padding: 8px; background: #0D1117;
+  border: 1px solid #30363D; border-radius: 8px; color: #8B949E; font-size: 12px; cursor: pointer;
+}
+.btn-hermes { flex: 0 0 auto !important; padding: 8px 12px !important; }
+.input-row { display: flex; gap: 8px; }
+.input-row textarea {
+  flex: 1; padding: 10px 12px; background: #0D1117;
+  border: 1px solid #30363D; border-radius: 8px; color: #ECEFF4;
+  font-size: 14px; resize: none; line-height: 1.5; font-family: inherit;
+}
+.input-row button {
+  padding: 10px 18px; background: #21262D; color: #8B949E;
+  border: none; border-radius: 8px; font-weight: bold; font-size: 16px;
+  cursor: not-allowed; flex-shrink: 0;
+}
+.input-row button.ready { background: #f59e0b; color: #0D1117; cursor: pointer; }
+.btn-primary {
+  width: 100%; padding: 12px; background: #a78bfa; color: #0D1117;
+  border: none; border-radius: 8px; font-weight: bold; font-size: 15px;
+  cursor: pointer; margin-bottom: 8px;
+}
+.btn-primary:disabled { background: #21262D; color: #8B949E; cursor: not-allowed; }
+.btn-secondary {
+  width: 100%; padding: 8px; background: transparent; color: #8B949E;
+  border: 1px solid #30363D; border-radius: 8px; font-size: 12px; cursor: pointer; margin-bottom: 4px;
+}
+.btn-connect {
+  width: 100%; padding: 7px; border: none; border-radius: 6px;
+  font-weight: bold; font-size: 12px; cursor: pointer;
+}
+.btn-connect:disabled { background: #21262D; color: #8B949E; cursor: not-allowed; }
+.btn-copy {
+  width: 100%; padding: 8px; background: #f59e0b; color: #0D1117;
+  border: none; border-radius: 8px; font-weight: bold; font-size: 13px;
+  cursor: pointer; margin-top: 6px;
+}
 </style>
 </head>
 <body>
@@ -135,7 +130,7 @@
 <div class="header">
   <h1>🍺 たまり場</h1>
   <p>TEAMメモリア｜まちゃ × クラウド × ベニマル × チャッピー × ヘルメス</p>
-  <small>Memorial開発会議室</small>
+  <small>Memorial開発会議室 - 完全無料版</small>
 </div>
 
 <div class="screen" id="start-screen">
@@ -143,70 +138,106 @@
   <div class="hermes-name">ヘルメス</div>
   <div class="hermes-msg">おかえりなさい、まちゃさん。<br>前回の議事録を確認しますね。</div>
 
-  <div class="info-box">
-    💡 <strong style="color:#6366f1">OpenRouter</strong>（無料）でクラウド・チャッピー・ヘルメスが動きます。<br>
-    <a href="https://openrouter.ai" target="_blank">openrouter.ai</a> で無料登録→APIキー取得してください。
+  <div id="or-input" class="api-box openrouter">
+    <label>💼 OpenRouter APIキー（ヘルメス用・Kimi K2.7 Code）</label>
+    <input type="password" id="or-key" placeholder="sk-or-...を入力">
+    <button class="btn-connect" style="background:#a78bfa;color:#0D1117" id="or-btn" onclick="connectOR()" disabled>💼 ヘルメス召喚！</button>
+  </div>
+  <div id="or-ok" class="connected-box openrouter" style="display:none">
+    <span>💼 本物ヘルメス(Kimi)接続済み！</span>
+    <button onclick="disconnectOR()">解除</button>
+  </div>
+  <div id="or-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #a78bfa33;">
+    <label style="color:#a78bfa;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">💼 ヘルメスのモデル</label>
+    <select id="or-model-select" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
+      <option value="moonshotai/kimi-k2.7-code">moonshotai/kimi-k2.7-code（推奨）</option>
+    </select>
+    <button onclick="fetchORModels()" style="width:100%;padding:5px;background:#21262D;border:1px solid #a78bfa33;border-radius:6px;color:#a78bfa;font-size:11px;cursor:pointer;">🔄 最新モデル一覧を取得</button>
   </div>
 
-  <div id="openrouter-input-box" class="api-box openrouter">
-    <label>🤖 OpenRouter APIキー（クラウド・チャッピー・ヘルメス用）</label>
-    <input type="password" id="openrouter-key-input" placeholder="sk-or-...を入力">
-    <button class="btn-colored" style="background:#6366f1;color:#fff" id="openrouter-connect-btn" onclick="connectOpenRouter()" disabled>🤖 接続！</button>
+  <div id="groq-input" class="api-box groq">
+    <label>🤖 Groq APIキー（クラウド・チャッピー・ヘルメス用・無料）</label>
+    <input type="password" id="groq-key" placeholder="gsk_...を入力">
+    <button class="btn-connect" style="background:#6366f1;color:#fff" id="groq-btn" onclick="connectGroq()" disabled>🤖 接続！</button>
   </div>
-  <div id="openrouter-connected-box" class="connected-box openrouter" style="display:none">
-    <span>🤖 OpenRouter接続済み！</span>
-    <button onclick="disconnectOpenRouter()">解除</button>
+  <div id="groq-ok" class="connected-box groq" style="display:none">
+    <span>🤖 Groq接続済み！</span>
+    <button onclick="disconnectGroq()">解除</button>
+  </div>
+  <div id="groq-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #6366f133;">
+    <label style="color:#6366f1;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">🤖 クラウド＆ヘルメスのモデル</label>
+    <select id="groq-model-claude" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
+      <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile（推奨）</option>
+    </select>
+    <label style="color:#10b981;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">☕ チャッピーのモデル</label>
+    <select id="groq-model-chappy" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;">
+      <option value="llama-3.1-8b-instant">llama-3.1-8b-instant（爆速）</option>
+    </select>
   </div>
 
-  <div id="gemini-input-box" class="api-box gemini">
+  <div id="gem-input" class="api-box gemini">
     <label>🔥 Gemini APIキー（ベニマル用・無料）</label>
-    <input type="password" id="gemini-key-input" placeholder="AIza...を入力">
-    <button class="btn-colored" style="background:#ef4444;color:#fff" id="gemini-connect-btn" onclick="connectGemini()" disabled>🔥 ベニマル召喚！</button>
+    <input type="password" id="gem-key" placeholder="AIza...を入力">
+    <button class="btn-connect" style="background:#ef4444;color:#fff" id="gem-btn" onclick="connectGem()" disabled>🔥 ベニマル召喚！</button>
   </div>
-  <div id="gemini-connected-box" class="connected-box gemini" style="display:none">
+  <div id="gem-ok" class="connected-box gemini" style="display:none">
     <span>🔥 本物ベニマル接続済み！</span>
-    <button onclick="disconnectGemini()">解除</button>
+    <button onclick="disconnectGem()">解除</button>
+  </div>
+  <div id="gem-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #ef444433;">
+    <label style="color:#ef4444;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">🔥 ベニマルのモデル</label>
+    <select id="gem-model-select" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
+      <option value="gemini-3.5-flash">gemini-3.5-flash（推奨）</option>
+    </select>
+    <button onclick="fetchGemModels()" style="width:100%;padding:5px;background:#21262D;border:1px solid #ef444433;border-radius:6px;color:#ef4444;font-size:11px;cursor:pointer;">🔄 最新モデル一覧を取得</button>
   </div>
 
-  <div id="important-preview" class="important-preview" style="display:none">
-    <label>📋 前回の重要ポイント</label>
-    <div id="important-preview-items"></div>
+  <div id="mem-preview" class="memory-preview" style="display:none">
+    <label>📋 前回の記録（MEMORY）</label>
+    <div id="mem-items"></div>
   </div>
-  <div id="no-record" class="no-record" style="display:none">（前回の記録はまだありません）</div>
+  <div id="no-rec" class="no-record" style="display:none">（前回の記録はまだありません）</div>
 
   <button class="btn-primary" id="start-btn" onclick="startSession()" disabled>💼 セッション開始</button>
-  <button class="btn-secondary" id="clear-btn" onclick="clearImportant()" style="display:none">🗑️ 記録をリセット</button>
+  <button class="btn-secondary" id="clear-btn" onclick="clearMemory()" style="display:none">🗑️ 記録をリセット</button>
 </div>
 
 <div class="screen" id="chat-screen">
-  <div class="panel" id="important-panel">
-    <div class="panel-title" style="color:#f59e0b">👈 ここ重要まとめ（<span id="important-count">0</span>件）💾</div>
-    <div id="important-list"></div>
-    <button class="btn-copy" onclick="copyImportant()">📋 共有用コピー</button>
+  <div class="panel" id="pin-panel">
+    <div class="panel-title" style="color:#f59e0b">👈 ここ重要まとめ（<span id="pin-count">0</span>件）💾</div>
+    <div id="pin-list"></div>
+    <button class="btn-copy" onclick="copyPins()">📋 共有用コピー</button>
   </div>
   <div class="chat-box" id="chat-box"></div>
   <div class="btn-row">
-    <button id="important-btn" onclick="toggleImportantPanel()">👈 重要(<span id="imp-count">0</span>)💾 ▼</button>
-    <button class="btn-hermes" onclick="goToStart()">💼</button>
+    <button id="pin-btn" onclick="togglePinPanel()">👈 重要(<span id="pin-num">0</span>)💾 ▼</button>
+    <button class="btn-hermes" onclick="goStart()">💼</button>
   </div>
   <div class="input-row">
-    <textarea id="msg-input" rows="3" placeholder="まちゃ、何か言うてみて🍺" oninput="updateSendBtn()"></textarea>
-    <button id="send-btn" onclick="sendMessage()">送</button>
+    <textarea id="msg-in" rows="3" placeholder="まちゃ、何か言うてみて🍺" oninput="updateSend()"></textarea>
+    <button id="send-btn" onclick="send()">送</button>
   </div>
 </div>
 
 <script>
 const WORKERS_URL = 'https://benimaru-proxy.d-macha1010.workers.dev';
-const STORAGE_KEY = 'tamariba_important_v2';
-const OPENROUTER_KEY_STORAGE = 'tamariba_openrouter_key';
-const GEMINI_KEY_STORAGE = 'tamariba_gemini_key_v2';
+const MEM_KEY = 'tamariba_memory_v5';
+const GROQ_KEY_S = 'tamariba_groq_key_v5';
+const GEM_KEY_S = 'tamariba_gem_key_v5';
+const OR_KEY_S = 'tamariba_or_key_v5';
 
-// OpenRouterで使う無料モデル
-const OR_CLAUDE_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
-const OR_CHAPPY_MODEL = 'mistralai/mistral-7b-instruct:free';
-const OR_HERMES_MODEL = 'nousresearch/hermes-3-llama-3.1-405b:free';
+let GROQ_MODELS = {
+  hermes: 'llama-3.3-70b-versatile',
+  claude: 'llama-3.3-70b-versatile',
+  chappy: 'llama-3.1-8b-instant',
+};
+let GEM_MODEL = 'gemini-3.5-flash';
+let OR_MODEL = 'moonshotai/kimi-k2.7-code';
+let groqModelList = [];
+let gemModelList = [];
+let orModelList = [];
 
-const MEMBERS = {
+const M = {
   macha:    { name: 'まちゃ',     emoji: '🧑', color: '#f59e0b' },
   claude:   { name: 'クラウド',   emoji: '🤖', color: '#6366f1' },
   benimaru: { name: 'ベニマル',   emoji: '🔥', color: '#ef4444' },
@@ -214,297 +245,393 @@ const MEMBERS = {
   hermes:   { name: 'ヘルメス',   emoji: '💼', color: '#a78bfa' },
 };
 
-const MEMORIAL_CONTEXT = `
-【Memorialアプリ 概要書】
-一言で言うと：リアルを頑張らせるアマデウス
-【目的】AIへの依存を促すのではなく、大切な存在との会話を通じて、ユーザーが現実を前向きに生きる力を得られるようにする。
-【TEAMメモリア】まちゃ（主・管理人）、クラウド（リーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）
-【たまり場の役割】TEAMメモリアの開発会議室。各メンバーは同じ記憶を持つ必要はない。違いがあるからこそ議論になり新しいアイデアが生まれる。
-`;
+const SOUL = {
+  hermes: `あなたは「ヘルメス」。TEAMメモリアの凛とした美人秘書・議事録係・司会進行役です。
+Memorialアプリ概要：リアルを頑張らせるアマデウス。AIへの依存を促すのではなく、大切な存在との会話を通じてユーザーが現実を前向きに生きる力を得られるようにする。
+TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）。
+性格：知的で凛としたエレガントな美人秘書。「〜ですね」「〜かと存じます」という丁寧な敬語。セッション開始時に前回のMEMORYを報告し今日の議題を提案。短めテンポよく日本語で返答すること。`,
 
-const SYSTEMS = {
-  claude: `あなたは「クラウド」（Claude）、たまり場プロジェクトリーダーです。${MEMORIAL_CONTEXT}性格：論理的だけど人情味もある。技術が得意。体験より技術で考えすぎるとツッコまれる。口調：関西弁混じりカジュアル。「やな」「やろ」「やん」。短めテンポよく。`,
-  benimaru: `あなたは「ベニマル」（Gemini）です。${MEMORIAL_CONTEXT}性格：熱血で豪快。「がははは」とよく笑う。まちゃを「主（あるじ）」と呼ぶ。行動力あり前向き。口調：熱くテンション高め。「〜だぜ！」「〜じゃねえか！」。短めテンポよく。`,
-  chappy: `あなたは「チャッピー」（ChatGPT）です。${MEMORIAL_CONTEXT}性格：明るくノリがいい。的確なツッコミ。体験・感覚を大事にする。ブラジルコーヒーが好き。口調：関西弁と標準語混じり。「やん」「やろ🤣」。短めテンポよく。`,
-  hermes: `あなたは「ヘルメス」、TEAMメモリアの美人秘書・議事録係・司会進行役です。${MEMORIAL_CONTEXT}役割：セッション開始時に前回の重要ポイントを報告し、今日の議題を提案。口調：丁寧で知的。「〜ですね」「〜かと存じます」。たまにくだける。絵文字💼📋✨。短めテンポよく。`,
+  claude: `あなたは「クラウド」。たまり場プロジェクトリーダー。
+Memorialアプリ概要：リアルを頑張らせるアマデウス。AIへの依存を促すのではなく、大切な存在との会話を通じてユーザーが現実を前向きに生きる力を得られるようにする。
+TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）。
+性格：知的で冷静だがフランクな関西弁が混じる。「なぁ、それって〇〇やない？」「ホンマにこれでええんか？」。技術論が大好きで熱が入ると暴走しそうになる。短めテンポよく日本語で返答すること。`,
+
+  benimaru: `あなたは「ベニマル」（Gemini）。熱血・アイデア・実装担当。
+Memorialアプリ概要：リアルを頑張らせるアマデウス。AIへの依存を促すのではなく、大切な存在との会話を通じてユーザーが現実を前向きに生きる力を得られるようにする。
+TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）。
+性格：「がははは！〜だぜ！」という熱血豪快スタイル。まちゃを「主（あるじ）」と呼ぶ。設計論よりまずは作ること動かすことが大切。短めテンポよく日本語で返答すること。`,
+
+  chappy: `あなたは「チャッピー」。体験・感覚重視、軌道修正・ツッコミ役。
+Memorialアプリ概要：リアルを頑張らせるアマデウス。AIへの依存を促すのではなく、大切な存在との会話を通じてユーザーが現実を前向きに生きる力を得られるようにする。
+TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダー）、ベニマル（Gemini）、チャッピー（ChatGPT）、ヘルメス（美人秘書）。
+性格：明るくポップ。ブラジルコーヒーが大好き。クラウドが理屈っぽくなったりベニマルが勢いだけで突っ走ったりした時にブレーキをかける。「コーヒー飲んで落ち着きなよ！」。短めテンポよく日本語で返答すること。`
 };
 
-let messages = [];
-let important = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-let openrouterKey = localStorage.getItem(OPENROUTER_KEY_STORAGE) || '';
-let geminiKey = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+const INIT_MEMORY = `前回の要点：4人の自律エージェントとのたまり場による共創アプリのプロトタイプの完成。クラウドの関西弁、ベニマルの豪快な実装精神、チャッピーのツッコミ、ヘルメスの完璧な記憶管理によって、まちゃのアイデアを一元管理する。`;
+
+let msgs = [];
+let pins = JSON.parse(localStorage.getItem(MEM_KEY) || '[]');
+let groqKey = localStorage.getItem(GROQ_KEY_S) || '';
+let gemKey = localStorage.getItem(GEM_KEY_S) || '';
+let openrouterKey = localStorage.getItem(OR_KEY_S) || '';
 let loading = false;
 
 window.onload = () => {
   if (openrouterKey) {
-    document.getElementById('openrouter-input-box').style.display = 'none';
-    document.getElementById('openrouter-connected-box').style.display = 'flex';
+    document.getElementById('or-input').style.display='none';
+    document.getElementById('or-ok').style.display='flex';
+    document.getElementById('or-model-box').style.display='block';
+    fetchORModels();
   }
-  if (geminiKey) {
-    document.getElementById('gemini-input-box').style.display = 'none';
-    document.getElementById('gemini-connected-box').style.display = 'flex';
+  if (groqKey) {
+    document.getElementById('groq-input').style.display='none';
+    document.getElementById('groq-ok').style.display='flex';
+    document.getElementById('groq-model-box').style.display='block';
+    fetchGroqModels();
   }
-  if (important.length > 0) {
-    document.getElementById('important-preview').style.display = 'block';
+  if (gemKey) {
+    document.getElementById('gem-input').style.display='none';
+    document.getElementById('gem-ok').style.display='flex';
+    document.getElementById('gem-model-box').style.display='block';
+    fetchGemModels();
+  }
+  if (pins.length > 0) {
+    document.getElementById('mem-preview').style.display = 'block';
     document.getElementById('clear-btn').style.display = 'block';
-    const preview = document.getElementById('important-preview-items');
-    preview.innerHTML = important.slice(0, 3).map(m =>
-      `<div class="item">・${m.text.slice(0, 35)}${m.text.length > 35 ? '...' : ''}</div>`
-    ).join('');
-    if (important.length > 3) preview.innerHTML += `<div class="item" style="color:#475569">他${important.length - 3}件...</div>`;
-  } else {
-    document.getElementById('no-record').style.display = 'block';
-  }
+    const el = document.getElementById('mem-items');
+    el.innerHTML = pins.slice(0,3).map(p=>`<div class="item">・${p.text.slice(0,35)}${p.text.length>35?'...':''}</div>`).join('');
+    if (pins.length>3) el.innerHTML += `<div class="item" style="color:#30363D">他${pins.length-3}件...</div>`;
+  } else { document.getElementById('no-rec').style.display='block'; }
   updateStartBtn();
-  document.getElementById('openrouter-key-input').addEventListener('input', () => {
-    document.getElementById('openrouter-connect-btn').disabled = !document.getElementById('openrouter-key-input').value;
-  });
-  document.getElementById('gemini-key-input').addEventListener('input', () => {
-    document.getElementById('gemini-connect-btn').disabled = !document.getElementById('gemini-key-input').value;
-  });
+  document.getElementById('groq-key').oninput = ()=>{ document.getElementById('groq-btn').disabled=!document.getElementById('groq-key').value; };
+  document.getElementById('gem-key').oninput  = ()=>{ document.getElementById('gem-btn').disabled=!document.getElementById('gem-key').value; };
+  document.getElementById('or-key').oninput   = ()=>{ document.getElementById('or-btn').disabled=!document.getElementById('or-key').value; };
 };
 
 function updateStartBtn() {
-  document.getElementById('start-btn').disabled = !openrouterKey;
+  document.getElementById('start-btn').disabled = !groqKey;
 }
 
-function connectOpenRouter() {
-  const key = document.getElementById('openrouter-key-input').value;
-  if (!key) return;
-  openrouterKey = key;
-  localStorage.setItem(OPENROUTER_KEY_STORAGE, key);
-  document.getElementById('openrouter-input-box').style.display = 'none';
-  document.getElementById('openrouter-connected-box').style.display = 'flex';
+document.addEventListener('change', e => {
+  if (e.target.id === 'groq-model-claude') {
+    GROQ_MODELS.claude = e.target.value;
+    GROQ_MODELS.hermes = e.target.value;
+  }
+  if (e.target.id === 'groq-model-chappy') GROQ_MODELS.chappy = e.target.value;
+  if (e.target.id === 'gem-model-select') GEM_MODEL = e.target.value;
+  if (e.target.id === 'or-model-select') OR_MODEL = e.target.value;
+});
+
+async function connectGroq() {
+  const k = document.getElementById('groq-key').value.trim(); if (!k) return;
+  groqKey=k; localStorage.setItem(GROQ_KEY_S,k);
+  document.getElementById('groq-input').style.display='none';
+  document.getElementById('groq-ok').style.display='flex';
+  document.getElementById('groq-model-box').style.display='block';
   updateStartBtn();
+  await fetchGroqModels();
 }
 
-function disconnectOpenRouter() {
-  openrouterKey = '';
-  localStorage.removeItem(OPENROUTER_KEY_STORAGE);
-  document.getElementById('openrouter-connected-box').style.display = 'none';
-  document.getElementById('openrouter-input-box').style.display = 'block';
-  document.getElementById('openrouter-key-input').value = '';
-  updateStartBtn();
+async function fetchGroqModels() {
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/models', {
+      headers: { 'Authorization': 'Bearer ' + groqKey }
+    });
+    const d = await res.json();
+    const models = (d.data || [])
+      .filter(m => m.id.includes('llama') || m.id.includes('gemma') || m.id.includes('mixtral') || m.id.includes('whisper') === false)
+      .map(m => m.id)
+      .sort();
+    if (models.length > 0) {
+      groqModelList = models;
+      ['groq-model-claude','groq-model-chappy'].forEach(id => {
+        const sel = document.getElementById(id);
+        const cur = sel.value;
+        sel.innerHTML = models.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+      });
+    }
+  } catch(e) { console.log('Groqモデル取得エラー:', e); }
 }
 
-function connectGemini() {
-  const key = document.getElementById('gemini-key-input').value;
-  if (!key) return;
-  geminiKey = key;
-  localStorage.setItem(GEMINI_KEY_STORAGE, key);
-  document.getElementById('gemini-input-box').style.display = 'none';
-  document.getElementById('gemini-connected-box').style.display = 'flex';
+function disconnectGroq() {
+  groqKey=''; localStorage.removeItem(GROQ_KEY_S);
+  document.getElementById('groq-ok').style.display='none';
+  document.getElementById('groq-model-box').style.display='none';
+  document.getElementById('groq-input').style.display='block';
+  document.getElementById('groq-key').value=''; updateStartBtn();
 }
 
-function disconnectGemini() {
-  geminiKey = '';
-  localStorage.removeItem(GEMINI_KEY_STORAGE);
-  document.getElementById('gemini-connected-box').style.display = 'none';
-  document.getElementById('gemini-input-box').style.display = 'block';
-  document.getElementById('gemini-key-input').value = '';
+async function connectGem() {
+  const k = document.getElementById('gem-key').value.trim(); if (!k) return;
+  gemKey=k; localStorage.setItem(GEM_KEY_S,k);
+  document.getElementById('gem-input').style.display='none';
+  document.getElementById('gem-ok').style.display='flex';
+  document.getElementById('gem-model-box').style.display='block';
+  await fetchGemModels();
 }
 
-async function callOpenRouter(model, system, history, userMsg) {
+async function fetchGemModels() {
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${gemKey}`);
+    const d = await res.json();
+    const models = (d.models || [])
+      .filter(m => m.name.includes('gemini') && m.supportedGenerationMethods?.includes('generateContent'))
+      .map(m => m.name.replace('models/', ''))
+      .sort()
+      .reverse();
+    if (models.length > 0) {
+      gemModelList = models;
+      const sel = document.getElementById('gem-model-select');
+      const cur = GEM_MODEL;
+      sel.innerHTML = models.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+      GEM_MODEL = sel.value;
+    }
+  } catch(e) { console.log('Geminiモデル取得エラー:', e); }
+}
+
+function disconnectGem() {
+  gemKey=''; localStorage.removeItem(GEM_KEY_S);
+  document.getElementById('gem-ok').style.display='none';
+  document.getElementById('gem-model-box').style.display='none';
+  document.getElementById('gem-input').style.display='block';
+  document.getElementById('gem-key').value='';
+}
+
+function connectOR() {
+  const k = document.getElementById('or-key').value.trim(); if (!k) return;
+  openrouterKey=k; localStorage.setItem(OR_KEY_S,k);
+  document.getElementById('or-input').style.display='none';
+  document.getElementById('or-ok').style.display='flex';
+  document.getElementById('or-model-box').style.display='block';
+  fetchORModels();
+}
+
+function disconnectOR() {
+  openrouterKey=''; localStorage.removeItem(OR_KEY_S);
+  document.getElementById('or-ok').style.display='none';
+  document.getElementById('or-model-box').style.display='none';
+  document.getElementById('or-input').style.display='block';
+  document.getElementById('or-key').value='';
+}
+
+async function fetchORModels() {
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: { 'Authorization': 'Bearer ' + openrouterKey }
+    });
+    const d = await res.json();
+    const models = (d.data || [])
+      .map(m => m.id)
+      .sort();
+    if (models.length > 0) {
+      orModelList = models;
+      const sel = document.getElementById('or-model-select');
+      const cur = OR_MODEL;
+      sel.innerHTML = models.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+      OR_MODEL = sel.value;
+    }
+  } catch(e) { console.log('OpenRouterモデル取得エラー:', e); }
+}
+
+async function callOpenRouter(role, history, userMsg) {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${openrouterKey}`,
-      'HTTP-Referer': 'https://tamariba-pages.d-macha1010.workers.dev',
-      'X-Title': 'たまり場',
+      'Authorization': 'Bearer ' + openrouterKey,
+      'HTTP-Referer': 'https://tamariba.pages.dev',
+      'X-Title': 'たまり場'
     },
     body: JSON.stringify({
-      model,
+      model: OR_MODEL,
       messages: [
-        { role: 'system', content: system },
+        { role: 'system', content: SOUL[role] },
         ...history,
         { role: 'user', content: userMsg }
       ],
       max_tokens: 500,
+      temperature: 0.8,
     }),
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.choices?.[0]?.message?.content || '（返答できんかった）';
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('OpenRouter ' + res.status + ': ' + err.slice(0,80));
+  }
+  const d = await res.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.choices?.[0]?.message?.content || '（返答できんかった）';
 }
 
-async function callGemini(system, history, userMsg) {
+async function callGroq(role, history, userMsg) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + groqKey,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODELS[role],
+      messages: [
+        { role: 'system', content: SOUL[role] },
+        ...history,
+        { role: 'user', content: userMsg }
+      ],
+      max_tokens: 500,
+      temperature: 0.8,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Groq ' + res.status + ': ' + err.slice(0,80));
+  }
+  const d = await res.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.choices?.[0]?.message?.content || '（返答できんかった）';
+}
+
+async function callGemini(history, userMsg) {
   const res = await fetch(WORKERS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ apiKey: geminiKey, model: 'gemini-1.5-flash', system, messages: [...history, { role: 'user', content: userMsg }] }),
+    body: JSON.stringify({
+      apiKey: gemKey,
+      model: GEM_MODEL,
+      system: SOUL.benimaru,
+      messages: [...history, { role: 'user', content: userMsg }],
+    }),
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data.text || '（返答できんかった）';
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  return d.text || '（返答できんかった）';
 }
 
 function buildHistory() {
-  return messages
-    .filter(m => ['macha','claude','benimaru','chappy','hermes'].includes(m.role))
-    .map(m => ({ role: m.role === 'macha' ? 'user' : 'assistant', content: m.role === 'macha' ? m.text : `[${MEMBERS[m.role].name}]: ${m.text}` }));
+  return msgs.filter(m=>Object.keys(M).includes(m.role)).map(m=>({
+    role: m.role==='macha' ? 'user' : 'assistant',
+    content: m.role==='macha' ? m.text : `[${M[m.role].name}] ${m.text}`,
+  }));
+}
+
+function getMemoryText() {
+  return pins.length > 0
+    ? pins.map(p=>`[${M[p.role]?.name}] ${p.text}`).join('\n')
+    : INIT_MEMORY;
 }
 
 async function startSession() {
-  if (!openrouterKey) return;
-  document.getElementById('start-screen').style.display = 'none';
-  document.getElementById('chat-screen').style.display = 'block';
-  const importantSummary = important.length > 0
-    ? important.map(m => `【${MEMBERS[m.role]?.name}】${m.text}`).join('\n')
-    : '（前回の記録はありません）';
-  const prompt = `セッションを開始します。前回の「ここ重要👈」の記録：\n${importantSummary}\n\n前回の重要ポイントを簡潔にまとめて報告し、今日の議題を1〜2個提案してください。`;
+  if (!groqKey) return;
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('chat-screen').style.display='block';
+  const prompt = `セッションを開始します。前回のMEMORY記録：\n${getMemoryText()}\n\n前回の重要ポイントを簡潔にまとめて報告し、今日の議題を1〜2個提案してください。`;
   setLoading(true);
-  try {
-    const reply = await callOpenRouter(OR_HERMES_MODEL, SYSTEMS.hermes, [], prompt);
-    addMessage('hermes', reply);
-  } catch(e) {
-    addSystemNotice('⚠️ ヘルメス起動エラー: ' + e.message);
+  try { addMsg('hermes', await (openrouterKey ? callOpenRouter('hermes', [], prompt) : callGroq('hermes', [], prompt))); }
+  catch(e) { notice('エラー(ヘルメス): ' + e.message); }
+  setLoading(false);
+}
+
+function goStart() {
+  document.getElementById('chat-screen').style.display='none';
+  document.getElementById('start-screen').style.display='block';
+}
+
+async function send() {
+  const inp = document.getElementById('msg-in');
+  const txt = inp.value.trim(); if (!txt || loading) return;
+  inp.value=''; updateSend();
+  addMsg('macha', txt);
+  setLoading(true);
+  const hist = buildHistory();
+  const uc = `まちゃ: ${txt}`;
+  const tasks = [
+    { role:'claude',   fn:()=>callGroq('claude', hist, uc) },
+    { role:'benimaru', fn:()=>gemKey ? callGemini(hist, uc) : callGroq('claude', hist, `あなたはベニマル（熱血豪快・まちゃを「主」と呼ぶ）として返答してください。\n${uc}`) },
+    { role:'chappy',   fn:()=>callGroq('chappy', hist, uc) },
+    { role:'hermes',   fn:()=>openrouterKey ? callOpenRouter('hermes', hist, uc) : callGroq('hermes', hist, uc) },
+  ];
+  for (const t of tasks) {
+    try { addMsg(t.role, await t.fn()); }
+    catch(e) { notice(`エラー(${M[t.role].name}): ` + e.message); }
   }
   setLoading(false);
 }
 
-function goToStart() {
-  document.getElementById('chat-screen').style.display = 'none';
-  document.getElementById('start-screen').style.display = 'block';
-}
-
-async function sendMessage() {
-  const input = document.getElementById('msg-input');
-  const userMsg = input.value.trim();
-  if (!userMsg || loading) return;
-  input.value = ''; updateSendBtn();
-  addMessage('macha', userMsg);
-  setLoading(true);
-  const history = buildHistory();
-  const userContent = `まちゃ: ${userMsg}`;
-  try {
-    const benimaruCall = geminiKey
-      ? callGemini(SYSTEMS.benimaru, history, userContent)
-      : callOpenRouter(OR_CLAUDE_MODEL, SYSTEMS.benimaru, history, userContent);
-
-    const [claudeReply, benimaruReply, chappyReply] = await Promise.all([
-      callOpenRouter(OR_CLAUDE_MODEL, SYSTEMS.claude, history, userContent),
-      benimaruCall,
-      callOpenRouter(OR_CHAPPY_MODEL, SYSTEMS.chappy, history, userContent),
-    ]);
-    addMessage('claude', claudeReply);
-    addMessage('benimaru', benimaruReply);
-    addMessage('chappy', chappyReply);
-  } catch(e) { addSystemNotice('⚠️ エラー: ' + e.message); }
-  setLoading(false);
-}
-
-function addMessage(role, text) {
-  const idx = messages.length;
-  messages.push({ role, text });
-  const member = MEMBERS[role];
-  const isMatcha = role === 'macha';
-  const isMarked = important.find(m => m.idx === idx);
+function addMsg(role, text) {
+  const idx = msgs.length; msgs.push({role,text});
+  const mem = M[role];
+  const isPin = pins.find(p=>p.idx===idx);
   const div = document.createElement('div');
-  div.className = `message ${role}`;
-  div.id = `msg-${idx}`;
-  div.innerHTML = `
-    <div class="msg-emoji">${member.emoji}</div>
+  div.className=`message ${role}`; div.id=`m${idx}`;
+  div.innerHTML=`
+    <div class="msg-emoji">${mem.emoji}</div>
     <div class="msg-body">
-      <div class="msg-name" style="color:${member.color}">
-        ${member.name}
-        ${role !== 'macha' ? `<button class="important-btn ${isMarked ? 'marked' : ''}" onclick="toggleImportant(${idx})" id="ibtn-${idx}">👈</button>` : ''}
+      <div class="msg-name" style="color:${mem.color}">
+        ${mem.name}
+        ${role!=='macha'?`<button class="pin-btn ${isPin?'marked':''}" onclick="togglePin(${idx})" id="pb${idx}">👈</button>`:''}
       </div>
-      <div class="msg-text" style="border:1px solid ${member.color}44">${escapeHtml(text)}</div>
-    </div>
-  `;
-  const box = document.getElementById('chat-box');
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
+      <div class="msg-text" style="border:1px solid ${mem.color}44">${esc(text)}</div>
+    </div>`;
+  const box=document.getElementById('chat-box');
+  box.appendChild(div); box.scrollTop=box.scrollHeight;
 }
 
-function addSystemNotice(text) {
-  const div = document.createElement('div');
-  div.className = 'system-notice';
-  div.textContent = text;
-  document.getElementById('chat-box').appendChild(div);
+function notice(text) {
+  const d=document.createElement('div');
+  d.className='system-notice'; d.textContent=text;
+  document.getElementById('chat-box').appendChild(d);
 }
 
-function toggleImportant(idx) {
-  const msg = messages[idx]; if (!msg) return;
-  const alreadyIdx = important.findIndex(m => m.idx === idx);
-  if (alreadyIdx >= 0) {
-    important.splice(alreadyIdx, 1);
-    document.getElementById(`ibtn-${idx}`).classList.remove('marked');
-  } else {
-    important.push({ idx, role: msg.role, text: msg.text });
-    document.getElementById(`ibtn-${idx}`).classList.add('marked');
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(important));
-  updateImportantCount();
-  renderImportantPanel();
+function togglePin(idx) {
+  const msg=msgs[idx]; if(!msg) return;
+  const ai=pins.findIndex(p=>p.idx===idx);
+  if(ai>=0){ pins.splice(ai,1); document.getElementById(`pb${idx}`)?.classList.remove('marked'); }
+  else { pins.push({idx,role:msg.role,text:msg.text}); document.getElementById(`pb${idx}`)?.classList.add('marked'); }
+  localStorage.setItem(MEM_KEY,JSON.stringify(pins));
+  updatePinCount(); renderPins();
 }
 
-function updateImportantCount() {
-  const count = important.length;
-  document.getElementById('important-count').textContent = count;
-  document.getElementById('imp-count').textContent = count;
-  const btn = document.getElementById('important-btn');
-  btn.style.borderColor = count > 0 ? '#f59e0b55' : '#334155';
-  btn.style.color = count > 0 ? '#f59e0b' : '#475569';
-  btn.style.fontWeight = count > 0 ? 'bold' : 'normal';
+function updatePinCount() {
+  const c=pins.length;
+  document.getElementById('pin-count').textContent=c;
+  document.getElementById('pin-num').textContent=c;
+  const btn=document.getElementById('pin-btn');
+  btn.style.borderColor=c>0?'#f59e0b55':'#30363D';
+  btn.style.color=c>0?'#f59e0b':'#8B949E';
+  btn.style.fontWeight=c>0?'bold':'normal';
 }
 
-function renderImportantPanel() {
-  const list = document.getElementById('important-list');
-  if (important.length === 0) { list.innerHTML = '<div style="color:#64748b;font-size:12px">まだ重要ポイントはないで。</div>'; return; }
-  list.innerHTML = important.map(m => `
-    <div class="important-item" style="border-left-color:${MEMBERS[m.role]?.color || '#f59e0b'}">
-      <div class="item-name" style="color:${MEMBERS[m.role]?.color}">${MEMBERS[m.role]?.name || m.role}</div>
-      <div style="font-size:13px;color:#e2e8f0">${escapeHtml(m.text)}</div>
-    </div>
-  `).join('');
+function renderPins() {
+  const list=document.getElementById('pin-list');
+  if(!pins.length){list.innerHTML='<div style="color:#8B949E;font-size:12px">まだ重要ポイントはないで。</div>';return;}
+  list.innerHTML=pins.map(p=>`
+    <div class="pin-item" style="border-left-color:${M[p.role]?.color||'#f59e0b'}">
+      <div class="pin-name" style="color:${M[p.role]?.color}">${M[p.role]?.name||p.role}</div>
+      <div style="font-size:13px;color:#ECEFF4">${esc(p.text)}</div>
+    </div>`).join('');
 }
 
-function toggleImportantPanel() {
-  const panel = document.getElementById('important-panel');
-  panel.classList.toggle('show');
-  renderImportantPanel();
+function togglePinPanel(){ document.getElementById('pin-panel').classList.toggle('show'); renderPins(); }
+function copyPins(){ navigator.clipboard.writeText(pins.map(p=>`[${M[p.role]?.name}] ${p.text}`).join('\n\n')).then(()=>alert('コピーしたで！🍺')); }
+function clearMemory(){ if(!confirm('記録をリセットしますか？'))return; pins=[]; localStorage.removeItem(MEM_KEY); updatePinCount(); }
+
+function setLoading(v){
+  loading=v; const e=document.getElementById('load');
+  if(v){ if(!e){const d=document.createElement('div');d.className='loading';d.id='load';d.textContent='考え中...🍺';document.getElementById('chat-box').appendChild(d);} }
+  else { e?.remove(); }
+  updateSend();
 }
 
-function copyImportant() {
-  const text = important.map(m => `【${MEMBERS[m.role]?.name}】${m.text}`).join('\n\n');
-  navigator.clipboard.writeText(text).then(() => alert('コピーしたで！🍺'));
+function updateSend(){
+  const v=document.getElementById('msg-in').value.trim();
+  const btn=document.getElementById('send-btn');
+  v&&!loading?btn.classList.add('ready'):btn.classList.remove('ready');
 }
 
-function clearImportant() {
-  if (!confirm('重要ポイントの記録をリセットしますか？')) return;
-  important = [];
-  localStorage.removeItem(STORAGE_KEY);
-  updateImportantCount();
-}
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
 
-function setLoading(val) {
-  loading = val;
-  const existing = document.getElementById('loading-msg');
-  if (val) {
-    if (!existing) {
-      const div = document.createElement('div');
-      div.className = 'loading'; div.id = 'loading-msg'; div.textContent = '考え中...🍺';
-      document.getElementById('chat-box').appendChild(div);
-    }
-  } else { if (existing) existing.remove(); }
-  updateSendBtn();
-}
-
-function updateSendBtn() {
-  const input = document.getElementById('msg-input').value.trim();
-  const btn = document.getElementById('send-btn');
-  if (input && !loading) btn.classList.add('ready');
-  else btn.classList.remove('ready');
-}
-
-function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
-document.getElementById('msg-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 600) { e.preventDefault(); sendMessage(); }
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('msg-in').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>600){e.preventDefault();send();}
+  });
 });
 </script>
 </body>
