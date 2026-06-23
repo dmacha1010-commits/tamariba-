@@ -306,9 +306,16 @@ window.onload = () => {
     if (pins.length>3) el.innerHTML += `<div class="item" style="color:#30363D">他${pins.length-3}件...</div>`;
   } else { document.getElementById('no-rec').style.display='block'; }
   updateStartBtn();
-  document.getElementById('groq-key').oninput = ()=>{ document.getElementById('groq-btn').disabled=!document.getElementById('groq-key').value; };
-  document.getElementById('gem-key').oninput  = ()=>{ document.getElementById('gem-btn').disabled=!document.getElementById('gem-key').value; };
-  document.getElementById('or-key').oninput   = ()=>{ document.getElementById('or-btn').disabled=!document.getElementById('or-key').value; };
+  // 初期状態でキーが入力済みならボタンをenabled
+  const groqKeyEl = document.getElementById('groq-key');
+  const gemKeyEl  = document.getElementById('gem-key');
+  const orKeyEl   = document.getElementById('or-key');
+  document.getElementById('groq-btn').disabled = !groqKeyEl.value;
+  document.getElementById('gem-btn').disabled  = !gemKeyEl.value;
+  document.getElementById('or-btn').disabled   = !orKeyEl.value;
+  groqKeyEl.oninput = ()=>{ document.getElementById('groq-btn').disabled=!groqKeyEl.value; };
+  gemKeyEl.oninput  = ()=>{ document.getElementById('gem-btn').disabled=!gemKeyEl.value; };
+  orKeyEl.oninput   = ()=>{ document.getElementById('or-btn').disabled=!orKeyEl.value; };
 };
 
 function updateStartBtn() {
@@ -409,4 +416,229 @@ function disconnectOR() {
   document.getElementById('or-input').style.display='block';
   document.getElementById('or-key').value='';
 }
-async fu
+async function fetchORModels() {
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: { 'Authorization': 'Bearer ' + openrouterKey }
+    });
+    const d = await res.json();
+    const models = (d.data || [])
+      .map(m => m.id)
+      .sort();
+    if (models.length > 0) {
+      orModelList = models;
+      const sel = document.getElementById('or-model-select');
+      const saved = localStorage.getItem(OR_MODEL_S) || OR_MODEL;
+      sel.innerHTML = models.map(m => `<option value="${m}" ${m===saved?'selected':''}>${m}</option>`).join('');
+      OR_MODEL = sel.value;
+      localStorage.setItem(OR_MODEL_S, OR_MODEL);
+    }
+  } catch(e) { console.log('OpenRouterモデル取得エラー:', e); }
+}
+
+// OpenRouter（Kimi K2.7 Code → ヘルメス用）
+async function callOpenRouter(role, history, userMsg) {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + openrouterKey,
+      'HTTP-Referer': 'https://tamariba.pages.dev',
+      'X-Title': 'たまり場'
+    },
+    body: JSON.stringify({
+      model: OR_MODEL,
+      messages: [
+        { role: 'system', content: SOUL[role] },
+        ...history,
+        { role: 'user', content: userMsg }
+      ],
+      max_tokens: 500,
+      temperature: 0.8,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('OpenRouter ' + res.status + ': ' + err.slice(0,80));
+  }
+  const d = await res.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.choices?.[0]?.message?.content || '（返答できんかった）';
+}
+
+// Groq直叩き（爆速）
+async function callGroq(role, history, userMsg) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + groqKey,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODELS[role],
+      messages: [
+        { role: 'system', content: SOUL[role] },
+        ...history,
+        { role: 'user', content: userMsg }
+      ],
+      max_tokens: 500,
+      temperature: 0.8,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Groq ' + res.status + ': ' + err.slice(0,80));
+  }
+  const d = await res.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.choices?.[0]?.message?.content || '（返答できんかった）';
+}
+
+// Gemini直叩き（Workers経由でCORS回避）
+async function callGemini(history, userMsg) {
+  const res = await fetch(WORKERS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      apiKey: gemKey,
+      model: GEM_MODEL,
+      system: SOUL.benimaru,
+      messages: [...history, { role: 'user', content: userMsg }],
+    }),
+  });
+  const d = await res.json();
+  if (d.error) throw new Error(d.error);
+  return d.text || '（返答できんかった）';
+}
+
+function buildHistory() {
+  return msgs.filter(m=>Object.keys(M).includes(m.role)).map(m=>({
+    role: m.role==='macha' ? 'user' : 'assistant',
+    content: m.role==='macha' ? m.text : `[${M[m.role].name}] ${m.text}`,
+  }));
+}
+
+function getMemoryText() {
+  return pins.length > 0
+    ? pins.map(p=>`[${M[p.role]?.name}] ${p.text}`).join('\n')
+    : INIT_MEMORY;
+}
+
+async function startSession() {
+  if (!groqKey) return;
+  document.getElementById('start-screen').style.display='none';
+  document.getElementById('chat-screen').style.display='block';
+  const prompt = `セッションを開始します。前回のMEMORY記録：\n${getMemoryText()}\n\n前回の重要ポイントを簡潔にまとめて報告し、今日の議題を1〜2個提案してください。`;
+  setLoading(true);
+  try { addMsg('hermes', await (openrouterKey ? callOpenRouter('hermes', [], prompt) : callGroq('hermes', [], prompt))); }
+  catch(e) { notice('エラー(ヘルメス): ' + e.message); }
+  setLoading(false);
+}
+
+function goStart() {
+  document.getElementById('chat-screen').style.display='none';
+  document.getElementById('start-screen').style.display='block';
+}
+
+async function send() {
+  const inp = document.getElementById('msg-in');
+  const txt = inp.value.trim(); if (!txt || loading) return;
+  inp.value=''; updateSend();
+  addMsg('macha', txt);
+  setLoading(true);
+  const hist = buildHistory();
+  const uc = `まちゃ: ${txt}`;
+  const tasks = [
+    { role:'claude',   fn:()=>callGroq('claude', hist, uc) },
+    { role:'benimaru', fn:()=>gemKey ? callGemini(hist, uc) : callGroq('claude', hist, `あなたはベニマル（熱血豪快・まちゃを「主」と呼ぶ）として返答してください。\n${uc}`) },
+    { role:'chappy',   fn:()=>callGroq('chappy', hist, uc) },
+    { role:'hermes',   fn:()=>openrouterKey ? callOpenRouter('hermes', hist, uc) : callGroq('hermes', hist, uc) },
+  ];
+  for (const t of tasks) {
+    try { addMsg(t.role, await t.fn()); }
+    catch(e) { notice(`エラー(${M[t.role].name}): ` + e.message); }
+  }
+  setLoading(false);
+}
+
+function addMsg(role, text) {
+  const idx = msgs.length; msgs.push({role,text});
+  const mem = M[role];
+  const isPin = pins.find(p=>p.idx===idx);
+  const div = document.createElement('div');
+  div.className=`message ${role}`; div.id=`m${idx}`;
+  div.innerHTML=`
+    <div class="msg-emoji">${mem.emoji}</div>
+    <div class="msg-body">
+      <div class="msg-name" style="color:${mem.color}">
+        ${mem.name}
+        ${role!=='macha'?`<button class="pin-btn ${isPin?'marked':''}" onclick="togglePin(${idx})" id="pb${idx}">👈</button>`:''}
+      </div>
+      <div class="msg-text" style="border:1px solid ${mem.color}44">${esc(text)}</div>
+    </div>`;
+  const box=document.getElementById('chat-box');
+  box.appendChild(div); box.scrollTop=box.scrollHeight;
+}
+
+function notice(text) {
+  const d=document.createElement('div');
+  d.className='system-notice'; d.textContent=text;
+  document.getElementById('chat-box').appendChild(d);
+}
+
+function togglePin(idx) {
+  const msg=msgs[idx]; if(!msg) return;
+  const ai=pins.findIndex(p=>p.idx===idx);
+  if(ai>=0){ pins.splice(ai,1); document.getElementById(`pb${idx}`)?.classList.remove('marked'); }
+  else { pins.push({idx,role:msg.role,text:msg.text}); document.getElementById(`pb${idx}`)?.classList.add('marked'); }
+  localStorage.setItem(MEM_KEY,JSON.stringify(pins));
+  updatePinCount(); renderPins();
+}
+
+function updatePinCount() {
+  const c=pins.length;
+  document.getElementById('pin-count').textContent=c;
+  document.getElementById('pin-num').textContent=c;
+  const btn=document.getElementById('pin-btn');
+  btn.style.borderColor=c>0?'#f59e0b55':'#30363D';
+  btn.style.color=c>0?'#f59e0b':'#8B949E';
+  btn.style.fontWeight=c>0?'bold':'normal';
+}
+
+function renderPins() {
+  const list=document.getElementById('pin-list');
+  if(!pins.length){list.innerHTML='<div style="color:#8B949E;font-size:12px">まだ重要ポイントはないで。</div>';return;}
+  list.innerHTML=pins.map(p=>`
+    <div class="pin-item" style="border-left-color:${M[p.role]?.color||'#f59e0b'}">
+      <div class="pin-name" style="color:${M[p.role]?.color}">${M[p.role]?.name||p.role}</div>
+      <div style="font-size:13px;color:#ECEFF4">${esc(p.text)}</div>
+    </div>`).join('');
+}
+
+function togglePinPanel(){ document.getElementById('pin-panel').classList.toggle('show'); renderPins(); }
+function copyPins(){ navigator.clipboard.writeText(pins.map(p=>`[${M[p.role]?.name}] ${p.text}`).join('\n\n')).then(()=>alert('コピーしたで！🍺')); }
+function clearMemory(){ if(!confirm('記録をリセットしますか？'))return; pins=[]; localStorage.removeItem(MEM_KEY); updatePinCount(); }
+
+function setLoading(v){
+  loading=v; const e=document.getElementById('load');
+  if(v){ if(!e){const d=document.createElement('div');d.className='loading';d.id='load';d.textContent='考え中...🍺';document.getElementById('chat-box').appendChild(d);} }
+  else { e?.remove(); }
+  updateSend();
+}
+
+function updateSend(){
+  const v=document.getElementById('msg-in').value.trim();
+  const btn=document.getElementById('send-btn');
+  v&&!loading?btn.classList.add('ready'):btn.classList.remove('ready');
+}
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('msg-in').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey&&window.innerWidth>600){e.preventDefault();send();}
+  });
+});
+</script>
+</body>
+</html>
