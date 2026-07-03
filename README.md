@@ -29,10 +29,6 @@ body {
 }
 .api-box.groq { border: 1px solid #6366f133; }
 .api-box.gemini { border: 1px solid #ef444433; }
-.api-box.openrouter { border: 1px solid #a78bfa33; }
-.api-box.openrouter label { color: #a78bfa; }
-.connected-box.openrouter { border: 1px solid #a78bfa66; }
-.connected-box.openrouter span { color: #a78bfa; font-size: 12px; }
 .api-box label { font-size: 11px; font-weight: bold; display: block; margin-bottom: 6px; }
 .api-box.groq label { color: #6366f1; }
 .api-box.gemini label { color: #ef4444; }
@@ -138,23 +134,6 @@ body {
   <div class="hermes-name">ヘルメス</div>
   <div class="hermes-msg">おかえりなさい、まちゃさん。<br>前回の議事録を確認しますね。</div>
 
-  <div id="or-input" class="api-box openrouter">
-    <label>💼 OpenRouter APIキー（ヘルメス用・Kimi K2.7 Code）</label>
-    <input type="password" id="or-key" placeholder="sk-or-...を入力">
-    <button class="btn-connect" style="background:#a78bfa;color:#0D1117" id="or-btn" onclick="connectOR()" disabled>💼 ヘルメス召喚！</button>
-  </div>
-  <div id="or-ok" class="connected-box openrouter" style="display:none">
-    <span>💼 本物ヘルメス(Kimi)接続済み！</span>
-    <button onclick="disconnectOR()">解除</button>
-  </div>
-  <div id="or-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #a78bfa33;">
-    <label style="color:#a78bfa;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">💼 ヘルメスのモデル</label>
-    <select id="or-model-select" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
-      <option value="moonshotai/kimi-k2.7-code">moonshotai/kimi-k2.7-code（推奨）</option>
-    </select>
-    <button onclick="fetchORModels()" style="width:100%;padding:5px;background:#21262D;border:1px solid #a78bfa33;border-radius:6px;color:#a78bfa;font-size:11px;cursor:pointer;">🔄 最新モデル一覧を取得</button>
-  </div>
-
   <div id="groq-input" class="api-box groq">
     <label>🤖 Groq APIキー（クラウド・チャッピー・ヘルメス用・無料）</label>
     <input type="password" id="groq-key" placeholder="gsk_...を入力">
@@ -187,7 +166,7 @@ body {
   <div id="gem-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #ef444433;">
     <label style="color:#ef4444;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">🔥 ベニマルのモデル</label>
     <select id="gem-model-select" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
-      <option value="gemini-3.5-flash">gemini-3.5-flash（推奨）</option>
+      <option value="gemini-2.5-flash">gemini-2.5-flash（推奨）</option>
     </select>
     <button onclick="fetchGemModels()" style="width:100%;padding:5px;background:#21262D;border:1px solid #ef444433;border-radius:6px;color:#ef4444;font-size:11px;cursor:pointer;">🔄 最新モデル一覧を取得</button>
   </div>
@@ -224,18 +203,17 @@ const WORKERS_URL = 'https://benimaru-proxy.d-macha1010.workers.dev';
 const MEM_KEY = 'tamariba_memory_v5';
 const GROQ_KEY_S = 'tamariba_groq_key_v5';
 const GEM_KEY_S = 'tamariba_gem_key_v5';
-const OR_KEY_S = 'tamariba_or_key_v5';
 
+// Groqの無料モデル
+// 動的モデル管理
 let GROQ_MODELS = {
   hermes: 'llama-3.3-70b-versatile',
   claude: 'llama-3.3-70b-versatile',
   chappy: 'llama-3.1-8b-instant',
 };
-let GEM_MODEL = 'gemini-3.5-flash';
-let OR_MODEL = 'moonshotai/kimi-k2.7-code';
+let GEM_MODEL = 'gemini-2.5-flash';
 let groqModelList = [];
 let gemModelList = [];
-let orModelList = [];
 
 const M = {
   macha:    { name: 'まちゃ',     emoji: '🧑', color: '#f59e0b' },
@@ -273,16 +251,9 @@ let msgs = [];
 let pins = JSON.parse(localStorage.getItem(MEM_KEY) || '[]');
 let groqKey = localStorage.getItem(GROQ_KEY_S) || '';
 let gemKey = localStorage.getItem(GEM_KEY_S) || '';
-let openrouterKey = localStorage.getItem(OR_KEY_S) || '';
 let loading = false;
 
 window.onload = () => {
-  if (openrouterKey) {
-    document.getElementById('or-input').style.display='none';
-    document.getElementById('or-ok').style.display='flex';
-    document.getElementById('or-model-box').style.display='block';
-    fetchORModels();
-  }
   if (groqKey) {
     document.getElementById('groq-input').style.display='none';
     document.getElementById('groq-ok').style.display='flex';
@@ -305,13 +276,13 @@ window.onload = () => {
   updateStartBtn();
   document.getElementById('groq-key').oninput = ()=>{ document.getElementById('groq-btn').disabled=!document.getElementById('groq-key').value; };
   document.getElementById('gem-key').oninput  = ()=>{ document.getElementById('gem-btn').disabled=!document.getElementById('gem-key').value; };
-  document.getElementById('or-key').oninput   = ()=>{ document.getElementById('or-btn').disabled=!document.getElementById('or-key').value; };
 };
 
 function updateStartBtn() {
   document.getElementById('start-btn').disabled = !groqKey;
 }
 
+// プルダウン変更時にモデル変数を更新
 document.addEventListener('change', e => {
   if (e.target.id === 'groq-model-claude') {
     GROQ_MODELS.claude = e.target.value;
@@ -319,7 +290,6 @@ document.addEventListener('change', e => {
   }
   if (e.target.id === 'groq-model-chappy') GROQ_MODELS.chappy = e.target.value;
   if (e.target.id === 'gem-model-select') GEM_MODEL = e.target.value;
-  if (e.target.id === 'or-model-select') OR_MODEL = e.target.value;
 });
 
 async function connectGroq() {
@@ -352,15 +322,11 @@ async function fetchGroqModels() {
     }
   } catch(e) { console.log('Groqモデル取得エラー:', e); }
 }
-
 function disconnectGroq() {
   groqKey=''; localStorage.removeItem(GROQ_KEY_S);
-  document.getElementById('groq-ok').style.display='none';
-  document.getElementById('groq-model-box').style.display='none';
-  document.getElementById('groq-input').style.display='block';
+  document.getElementById('groq-ok').style.display='none'; document.getElementById('groq-model-box').style.display='none'; document.getElementById('groq-input').style.display='block';
   document.getElementById('groq-key').value=''; updateStartBtn();
 }
-
 async function connectGem() {
   const k = document.getElementById('gem-key').value.trim(); if (!k) return;
   gemKey=k; localStorage.setItem(GEM_KEY_S,k);
@@ -388,80 +354,13 @@ async function fetchGemModels() {
     }
   } catch(e) { console.log('Geminiモデル取得エラー:', e); }
 }
-
 function disconnectGem() {
   gemKey=''; localStorage.removeItem(GEM_KEY_S);
-  document.getElementById('gem-ok').style.display='none';
-  document.getElementById('gem-model-box').style.display='none';
-  document.getElementById('gem-input').style.display='block';
+  document.getElementById('gem-ok').style.display='none'; document.getElementById('gem-model-box').style.display='none'; document.getElementById('gem-input').style.display='block';
   document.getElementById('gem-key').value='';
 }
 
-function connectOR() {
-  const k = document.getElementById('or-key').value.trim(); if (!k) return;
-  openrouterKey=k; localStorage.setItem(OR_KEY_S,k);
-  document.getElementById('or-input').style.display='none';
-  document.getElementById('or-ok').style.display='flex';
-  document.getElementById('or-model-box').style.display='block';
-  fetchORModels();
-}
-
-function disconnectOR() {
-  openrouterKey=''; localStorage.removeItem(OR_KEY_S);
-  document.getElementById('or-ok').style.display='none';
-  document.getElementById('or-model-box').style.display='none';
-  document.getElementById('or-input').style.display='block';
-  document.getElementById('or-key').value='';
-}
-
-async function fetchORModels() {
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/models', {
-      headers: { 'Authorization': 'Bearer ' + openrouterKey }
-    });
-    const d = await res.json();
-    const models = (d.data || [])
-      .map(m => m.id)
-      .sort();
-    if (models.length > 0) {
-      orModelList = models;
-      const sel = document.getElementById('or-model-select');
-      const cur = OR_MODEL;
-      sel.innerHTML = models.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
-      OR_MODEL = sel.value;
-    }
-  } catch(e) { console.log('OpenRouterモデル取得エラー:', e); }
-}
-
-async function callOpenRouter(role, history, userMsg) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + openrouterKey,
-      'HTTP-Referer': 'https://tamariba.pages.dev',
-      'X-Title': 'たまり場'
-    },
-    body: JSON.stringify({
-      model: OR_MODEL,
-      messages: [
-        { role: 'system', content: SOUL[role] },
-        ...history,
-        { role: 'user', content: userMsg }
-      ],
-      max_tokens: 500,
-      temperature: 0.8,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error('OpenRouter ' + res.status + ': ' + err.slice(0,80));
-  }
-  const d = await res.json();
-  if (d.error) throw new Error(d.error.message);
-  return d.choices?.[0]?.message?.content || '（返答できんかった）';
-}
-
+// Groq直叩き（爆速）
 async function callGroq(role, history, userMsg) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -489,6 +388,7 @@ async function callGroq(role, history, userMsg) {
   return d.choices?.[0]?.message?.content || '（返答できんかった）';
 }
 
+// Gemini直叩き（Workers経由でCORS回避）
 async function callGemini(history, userMsg) {
   const res = await fetch(WORKERS_URL, {
     method: 'POST',
@@ -524,7 +424,7 @@ async function startSession() {
   document.getElementById('chat-screen').style.display='block';
   const prompt = `セッションを開始します。前回のMEMORY記録：\n${getMemoryText()}\n\n前回の重要ポイントを簡潔にまとめて報告し、今日の議題を1〜2個提案してください。`;
   setLoading(true);
-  try { addMsg('hermes', await (openrouterKey ? callOpenRouter('hermes', [], prompt) : callGroq('hermes', [], prompt))); }
+  try { addMsg('hermes', await callGroq('hermes', [], prompt)); }
   catch(e) { notice('エラー(ヘルメス): ' + e.message); }
   setLoading(false);
 }
@@ -546,7 +446,6 @@ async function send() {
     { role:'claude',   fn:()=>callGroq('claude', hist, uc) },
     { role:'benimaru', fn:()=>gemKey ? callGemini(hist, uc) : callGroq('claude', hist, `あなたはベニマル（熱血豪快・まちゃを「主」と呼ぶ）として返答してください。\n${uc}`) },
     { role:'chappy',   fn:()=>callGroq('chappy', hist, uc) },
-    { role:'hermes',   fn:()=>openrouterKey ? callOpenRouter('hermes', hist, uc) : callGroq('hermes', hist, uc) },
   ];
   for (const t of tasks) {
     try { addMsg(t.role, await t.fn()); }
