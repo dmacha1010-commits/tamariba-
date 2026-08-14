@@ -221,7 +221,7 @@ body {
 
 <script>
 const WORKERS_URL = 'https://benimaru-proxy.d-macha1010.workers.dev';
-const MEM_KEY = 'tamariba_memory_v5';
+const MEMORY_WORKER_URL = 'https://tamariba-memory-worker.d-macha1010.workers.dev/memory';
 const GROQ_KEY_S = 'tamariba_groq_key_v5';
 const GEM_KEY_S = 'tamariba_gem_key_v5';
 const OR_KEY_S = 'tamariba_or_key_v5';
@@ -274,13 +274,30 @@ TEAMメモリア：まちゃ（主・管理人）、クラウド（PJリーダ�
 const INIT_MEMORY = `前回の要点：4人の自律エージェントとのたまり場による共創アプリのプロトタイプの完成。クラウドの関西弁、ベニマルの豪快な実装精神、チャッピーのツッコミ、ヘルメスの完璧な記憶管理によって、まちゃのアイデアを一元管理する。`;
 
 let msgs = [];
-let pins = JSON.parse(localStorage.getItem(MEM_KEY) || '[]');
+let pins = [];
 let groqKey = localStorage.getItem(GROQ_KEY_S) || '';
 let gemKey = localStorage.getItem(GEM_KEY_S) || '';
 let openrouterKey = localStorage.getItem(OR_KEY_S) || '';
 let loading = false;
 
-document.addEventListener("DOMContentLoaded", () => {
+// ===== KV経由の記憶読み書き =====
+async function loadPinsFromKV() {
+  try {
+    const res = await fetch(MEMORY_WORKER_URL);
+    pins = await res.json();
+  } catch(e) { console.log('記憶読み込みエラー:', e); pins = []; }
+}
+async function savePinsToKV() {
+  try {
+    await fetch(MEMORY_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pins }),
+    });
+  } catch(e) { console.log('記憶保存エラー:', e); }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
   if (openrouterKey) {
     document.getElementById('or-input').style.display='none';
     document.getElementById('or-ok').style.display='flex';
@@ -299,6 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('gem-model-box').style.display='block';
     fetchGemModels();
   }
+  await loadPinsFromKV();
   if (pins.length > 0) {
     document.getElementById('mem-preview').style.display = 'block';
     document.getElementById('clear-btn').style.display = 'block';
@@ -589,12 +607,12 @@ function notice(text) {
   document.getElementById('chat-box').appendChild(d);
 }
 
-function togglePin(idx) {
+async function togglePin(idx) {
   const msg=msgs[idx]; if(!msg) return;
   const ai=pins.findIndex(p=>p.idx===idx);
   if(ai>=0){ pins.splice(ai,1); document.getElementById(`pb${idx}`)?.classList.remove('marked'); }
   else { pins.push({idx,role:msg.role,text:msg.text}); document.getElementById(`pb${idx}`)?.classList.add('marked'); }
-  localStorage.setItem(MEM_KEY,JSON.stringify(pins));
+  await savePinsToKV();
   updatePinCount(); renderPins();
 }
 
@@ -620,7 +638,7 @@ function renderPins() {
 
 function togglePinPanel(){ document.getElementById('pin-panel').classList.toggle('show'); renderPins(); }
 function copyPins(){ navigator.clipboard.writeText(pins.map(p=>`[${M[p.role]?.name}] ${p.text}`).join('\n\n')).then(()=>alert('コピーしたで！🍺')); }
-function clearMemory(){ if(!confirm('記録をリセットしますか？'))return; pins=[]; localStorage.removeItem(MEM_KEY); updatePinCount(); }
+async function clearMemory(){ if(!confirm('記録をリセットしますか？'))return; pins=[]; await savePinsToKV(); updatePinCount(); }
 
 function setLoading(v){
   loading=v; const e=document.getElementById('load');
