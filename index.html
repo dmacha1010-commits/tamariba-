@@ -150,7 +150,7 @@ body {
   <div id="or-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #a78bfa33;">
     <label style="color:#a78bfa;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">💼 ヘルメスのモデル</label>
     <select id="or-model-select" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
-      <option value="moonshotai/kimi-k2.7-code">moonshotai/kimi-k2.7-code（推奨）</option>
+      <option value="openai/gpt-oss-20b:free">openai/gpt-oss-20b:free（無料）</option>
     </select>
     <button onclick="fetchORModels()" style="width:100%;padding:5px;background:#21262D;border:1px solid #a78bfa33;border-radius:6px;color:#a78bfa;font-size:11px;cursor:pointer;">🔄 最新モデル一覧を取得</button>
   </div>
@@ -235,7 +235,7 @@ let GROQ_MODELS = {
   chappy: 'openai/gpt-oss-20b',
 };
 let GEM_MODEL = 'gemini-3.5-flash';
-let OR_MODEL = localStorage.getItem(OR_MODEL_S) || 'moonshotai/kimi-k2.7-code';
+let OR_MODEL = localStorage.getItem(OR_MODEL_S) || 'openai/gpt-oss-20b:free';
 let groqModelList = [];
 let gemModelList = [];
 let orModelList = [];
