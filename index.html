@@ -167,11 +167,11 @@ body {
   <div id="groq-model-box" style="display:none;background:#0D1117;border-radius:8px;padding:8px 10px;margin-bottom:12px;border:1px solid #6366f133;">
     <label style="color:#6366f1;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">🤖 クラウド＆ヘルメスのモデル</label>
     <select id="groq-model-claude" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;margin-bottom:6px;">
-      <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile（推奨）</option>
+      <option value="openai/gpt-oss-120b">openai/gpt-oss-120b（推奨）</option>
     </select>
     <label style="color:#10b981;font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">☕ チャッピーのモデル</label>
     <select id="groq-model-chappy" style="width:100%;padding:6px;background:#21262D;border:1px solid #30363D;border-radius:6px;color:#ECEFF4;font-size:12px;">
-      <option value="llama-3.1-8b-instant">llama-3.1-8b-instant（爆速）</option>
+      <option value="openai/gpt-oss-20b">openai/gpt-oss-20b（爆速）</option>
     </select>
   </div>
 
@@ -230,9 +230,9 @@ const OR_MODEL_S = 'tamariba_or_model_v5';
 // Groqの無料モデル
 // 動的モデル管理
 let GROQ_MODELS = {
-  hermes: 'llama-3.3-70b-versatile',
-  claude: 'llama-3.3-70b-versatile',
-  chappy: 'llama-3.1-8b-instant',
+  hermes: 'openai/gpt-oss-120b',
+  claude: 'openai/gpt-oss-120b',
+  chappy: 'openai/gpt-oss-20b',
 };
 let GEM_MODEL = 'gemini-3.5-flash';
 let OR_MODEL = localStorage.getItem(OR_MODEL_S) || 'moonshotai/kimi-k2.7-code';
